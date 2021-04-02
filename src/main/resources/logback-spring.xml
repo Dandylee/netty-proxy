@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <springProperty name="pid" source="spring.pid"/>
+    <springProperty name="applicationName" source="spring.application.name"
+                    defaultValue="app_${pid}"/>
+    <springProperty name="stdoutEnabled" source="logging.stdout.enabled" defaultValue="false"/>
+    <springProperty name="includeCallerData" source="logging.includeCallerData" defaultValue="true"/>
+
+    <property name="LOG_HOME" value="D:\\data\\board\\${applicationName}"/>
+
+    <!-- Handle JUL -->
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date [%p] [%thread] [%file:%line] [%level %logger{0}] [%X{traceId}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="info" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/info.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/rolling/info.%d{yyyy-MM-dd}.%i.log.gz
+            </fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>128MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%date [%thread] [%file:%line] [%level %logger{0}] [%X{traceId}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="async_info" class="com.yy.xh.example.logging.XhAsyncAppender">
+        <appender-ref ref="info"/>
+        <queueSize>1024</queueSize>
+        <includeCallerData>${includeCallerData}</includeCallerData>
+    </appender>
+
+    <appender name="error" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/rolling/error.%d{yyyy-MM-dd}.%i.log.gz
+            </fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>128MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%date [%thread] [%file:%line] [%level %logger{0}] [%X{traceId}] - %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
+
+    <root level="info">
+        <if condition="${stdoutEnabled}">
+            <then>
+                <appender-ref ref="stdout"/>
+            </then>
+        </if>
+        <appender-ref ref="async_info"/>
+        <appender-ref ref="error"/>
+    </root>
+</configuration>
